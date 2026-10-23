@@ -6,4 +6,4 @@ import { TaskController } from './task.controller.js';
   controllers: [TaskController],
   providers: [TaskService],
 })
-export class TaskModule {}
+export class TaskModule { }
