@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, MaxLength } from "class-validator"
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength } from "class-validator"
 import { Genre } from "../entities/movie.entity.js"
 
 export class UpdateMovieDto {
@@ -22,4 +22,9 @@ export class UpdateMovieDto {
     @IsOptional()
     @IsBoolean()
     isReleazed: boolean
+
+    @IsNotEmpty()
+    @IsString()
+    @IsUrl()
+    imageUrl: string
 }

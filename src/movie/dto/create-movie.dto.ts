@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, MaxLength } from "class-validator"
+import { IsArray, IsBoolean, IsEnum, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, IsUrl, MaxLength } from "class-validator"
 import { Genre } from "../entities/movie.entity.js"
 
 export class CreateMovieDto {
@@ -27,4 +27,9 @@ export class CreateMovieDto {
     @IsArray()
     @IsInt({ each: true })
     actorIds: number[]
+
+    @IsNotEmpty()
+    @IsString()
+    @IsUrl()
+    imageUrl: string
 }

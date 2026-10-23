@@ -2,3 +2,5 @@ task - базовые круды, дто, валидация, кастомный
 typeOrm - импорт и подключение
 работа с typeorm в movie, entity,
 связи one (movie) to many (review)
+связи many (actors) to many (movies)
+связи one (movie) to one (poster)
