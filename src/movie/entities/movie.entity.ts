@@ -1,4 +1,5 @@
-import { Column, CreateDateColumn, Entity, Generated, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Generated, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { ReviewEntity } from "../../review/entities/review.entity.js";
 
 export enum Genre {
     ACTION = 'action',
@@ -28,8 +29,8 @@ export class MovieEntity {
     description: string;
 
     @Column({
-        type: 'decimal',
-        precision: 2,
+        type: 'numeric',
+        precision: 3,
         scale: 1,
         default: 0,
     })
@@ -48,6 +49,9 @@ export class MovieEntity {
         default: false
     })
     isReleazed: boolean;
+
+    @OneToMany(() => ReviewEntity, review => review.movie)
+    reviews: ReviewEntity[]
 
     @CreateDateColumn({
         name: 'created_at'

@@ -36,8 +36,6 @@ export class MovieService {
     async update(id: number, dto: UpdateMovieDto): Promise<MovieEntity> {
         const movie = await this.findById(id);
 
-        if (!movie) throw new NotFoundException('movie not found')
-
         Object.assign(movie, dto)
 
         await this.movieRepository.save(movie);
@@ -45,9 +43,7 @@ export class MovieService {
     }
 
     async delete(id: number): Promise<boolean> {
-        const movie = await this.findById(id);
-
-        if (!movie) throw new NotFoundException('movie not found')
+        await this.findById(id);
 
         await this.movieRepository.delete({ id })
         return true
