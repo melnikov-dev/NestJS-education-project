@@ -1,21 +1,61 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, Generated, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+
+export enum Genre {
+    ACTION = 'action',
+    COMEDY = 'comedy',
+    DRAMA = 'drama',
+    FANTASY = 'fantasy',
+}
 
 @Entity({
     name: 'movies'
 })
 export class MovieEntity {
-    @PrimaryGeneratedColumn()
+    @PrimaryColumn()
+    @Generated('increment')
     id: number
 
-    @Column()
+    @Column({
+        type: 'varchar',
+        length: 128
+    })
     title: string;
 
-    @Column()
-    isReleased: boolean;
+    @Column({
+        type: 'text',
+        nullable: true,
+    })
+    description: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+    @Column({
+        type: 'decimal',
+        precision: 2,
+        scale: 1,
+        default: 0,
+    })
+    rating: number;
 
-    @UpdateDateColumn()
+    @Column({
+        type: 'enum',
+        enum: Genre,
+        nullable: true,
+    })
+    ganre: Genre;
+
+    @Column({
+        name: 'is_released',
+        type: 'boolean',
+        default: false
+    })
+    isReleazed: boolean;
+
+    @CreateDateColumn({
+        name: 'created_at'
+    })
+    createAt: Date;
+
+    @UpdateDateColumn({
+        name: 'updated_at'
+    })
     updatedAt: Date;
 }

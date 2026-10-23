@@ -12,7 +12,7 @@ export class MovieService {
     async findAll(): Promise<MovieEntity[]> {
         return await this.movieRepository.find({
             order: {
-                createdAt: 'desc'
+                createAt: 'desc'
             },
         })
     }
