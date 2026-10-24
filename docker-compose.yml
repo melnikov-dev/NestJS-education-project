@@ -1,22 +1,35 @@
-version: '3.9'
-
 services:
-  postgres:
-    container_name: postgres
+  typeorm-postgres:
+    container_name: nestjs-typeorm-postgres
     image: postgres:18
     restart: always
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${TYPEORM_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TYPEORM_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TYPEORM_POSTGRES_DB_NAME}
     ports:
-      - 5432:5432
+      - '${TYPEORM_POSTGRES_PORT}:5432'
     volumes:
-      - postgres_data:/var/lib/postgresql
+      - typeorm_postgres_data:/var/lib/postgresql
+    networks:
+      - nestjs-education-project
+  prisma-postgres:
+    container_name: nestjs-prisma-postgres
+    image: postgres:18
+    restart: always
+    environment:
+      POSTGRES_USER: ${PRISMA_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${PRISMA_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${PRISMA_POSTGRES_DB_NAME}
+    ports:
+      - '${PRISMA_POSTGRES_PORT}:5432'
+    volumes:
+      - prisma_postgres_data:/var/lib/postgresql
     networks:
       - nestjs-education-project
 volumes:
-  postgres_data:
+  typeorm_postgres_data:
+  prisma_postgres_data:
 
 networks:
   nestjs-education-project:

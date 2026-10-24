@@ -8,6 +8,11 @@ import { getTypeOrmConfig } from './config/typeorm.config.js';
 import { MovieModule } from './movie/movie.module.js';
 import { ReviewModule } from './review/review.module.js';
 import { ActorModule } from './actor/actor.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
+import { Movie2Module } from './movie-2/movie-2.module.js';
+import { Review2Module } from './review-2/review-2.module.js';
+import { Actor2Module } from './actor-2/actor-2.module.js';
+import { Poster2Module } from './poster-2/poster-2.module.js';
 
 @Module({
   imports: [
@@ -18,10 +23,16 @@ import { ActorModule } from './actor/actor.module.js';
       useFactory: getTypeOrmConfig,
       inject: [ConfigService],
     }),
+    PrismaModule,
     TaskModule,
     MovieModule,
     ReviewModule,
-    ActorModule],
+    ActorModule,
+    Movie2Module,
+    Review2Module,
+    Actor2Module,
+    Poster2Module,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

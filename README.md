@@ -59,17 +59,24 @@ TypeORM подключён в `AppModule` двумя частями:
 1. `ConfigModule.forRoot({ isGlobal: true })` загружает переменные окружения и делает `ConfigService` доступным во всём приложении.
 2. `TypeOrmModule.forRootAsync({ useFactory: getTypeOrmConfig, inject: [ConfigService] })` создаёт одно общее подключение к PostgreSQL асинхронно. Настройки вынесены в `src/config/typeorm.config.ts`, а не находятся в корневом модуле.
 
-Фабрика `getTypeOrmConfig` читает обязательные `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB_NAME` через `getOrThrow`. При отсутствии любой из них приложение завершится на старте с понятной причиной. Порт приложения берётся отдельно из `PORT`, со значением по умолчанию `3000`.
+Фабрика `getTypeOrmConfig` читает обязательные `TYPEORM_POSTGRES_HOST`, `TYPEORM_POSTGRES_PORT`, `TYPEORM_POSTGRES_USER`, `TYPEORM_POSTGRES_PASSWORD` и `TYPEORM_POSTGRES_DB_NAME` через `getOrThrow`. При отсутствии любой из них приложение завершится на старте с понятной причиной. Порт приложения берётся отдельно из `PORT`, со значением по умолчанию `3000`.
 
 Пример `.env`:
 
 ```dotenv
 PORT=3000
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB_NAME=nestjs_education_project
+TYPEORM_POSTGRES_HOST=localhost
+TYPEORM_POSTGRES_PORT=5432
+TYPEORM_POSTGRES_USER=postgres
+TYPEORM_POSTGRES_PASSWORD=postgres
+TYPEORM_POSTGRES_DB_NAME=nestjs-education-project
+
+PRISMA_POSTGRES_HOST=localhost
+PRISMA_POSTGRES_PORT=5433
+PRISMA_POSTGRES_USER=postgres
+PRISMA_POSTGRES_PASSWORD=postgres
+PRISMA_POSTGRES_DB_NAME=nestjs-education-project
+PRISMA_POSTGRES_URI="postgresql://${PRISMA_POSTGRES_USER}:${PRISMA_POSTGRES_PASSWORD}@${PRISMA_POSTGRES_HOST}:${PRISMA_POSTGRES_PORT}/${PRISMA_POSTGRES_DB_NAME}?schema=public"
 ```
 
 `autoLoadEntities: true` добавляет в подключение entity, зарегистрированные в feature-модулях. `synchronize: true` синхронизирует схему с entity при запуске — удобно для обучения и локальной разработки, но не для production: там нужны миграции, чтобы контролировать изменения схемы и не потерять данные.
@@ -125,6 +132,48 @@ Movie * ── * Actor
 Промежуточная таблица хранит пары идентификаторов и позволяет одному фильму иметь много актёров, а актёру сниматься во многих фильмах. `@JoinTable` должен быть на одной стороне; вторая сторона (`ActorEntity.movies`) лишь ссылается на неё.
 
 При создании фильма `MovieService` получает `actorIds`, загружает подходящих актёров через `In(actorIds)` и передаёт их в `movieRepository.create`. При `save` TypeORM сохраняет связь в `movies_actors`. В `findById` указано `relations: { actors: true }`, поэтому актёры загружаются вместе с фильмом; связи в TypeORM не подгружаются автоматически, если это не указать явно или не настроить eager-загрузку.
+
+## Prisma: параллельная реализация
+
+Prisma добавлена как второй ORM, а исходные TypeORM-модули оставлены без изменений. Это позволяет сравнить подходы на одном домене. Prisma-модули используют отдельные таблицы с суффиксом `_2` (`movies_2`, `actors_2`, `reviews_2`, `movie_posters_2`), поэтому две реализации могут безопасно работать в одной базе данных.
+
+| Модуль | Маршрут | Логика |
+| --- | --- | --- |
+| `actor-2` | `POST /actors-2` | Создать актёра. |
+| `movie-2` | `/movies-2` | CRUD фильма, создание постера и привязка актёров. |
+| `review-2` | `POST /reviews-2` | Создать отзыв и связать его с фильмом. |
+| `poster-2` | `POST /posters-2` | Создать постер для существующего фильма без постера. |
+
+Схема находится в `prisma/schema.prisma`. В ней `Movie2`, `Actor2`, `Review2` и `Poster2` описывают таблицы и связи. `@map` и `@@map` задают имена столбцов и таблиц PostgreSQL, не заставляя переименовывать TypeScript-поля.
+
+`PrismaModule` объявлен глобальным и экспортирует `PrismaService`. Сервис наследует `PrismaClient`: при инициализации Nest он вызывает `$connect()`, а при остановке — `$disconnect()`. Поэтому прикладные сервисы получают один общий клиент через DI, например `constructor(private readonly prisma: PrismaService)`.
+
+### Prisma вместо repository
+
+В TypeORM используется `Repository<Entity>` и `@InjectRepository`. В Prisma клиент генерируется из схемы, а запросы вызываются прямо на модели:
+
+```ts
+await this.prisma.movie2.findMany({ orderBy: { createdAt: 'desc' } });
+await this.prisma.movie2.findUnique({ where: { id }, include: { actors: true } });
+```
+
+Связи задаются в объекте запроса. При создании фильма `Movie2Service` проверяет актёров, затем одним nested write создаёт постер и добавляет связи с актёрами:
+
+```ts
+await this.prisma.movie2.create({
+  data: {
+    title: 'Example',
+    poster: { create: { url: 'https://example.com/poster.jpg' } },
+    actors: { connect: [{ id: 1 }, { id: 2 }] },
+  },
+});
+```
+
+Nested write выполняется атомарно: если постер или привязка актёров не сохранится, Prisma не создаст частично заполненный фильм. Это устраняет проблему порядка сохранения one-to-one-связи, которая возможна при ручном сохранении связанных объектов.
+
+Для one-to-many в `Review2Service` используется `movie: { connect: { id: movie.id } }`. Один-к-одному реализован обязательным `Poster2.movieId` с `@unique`; при удалении фильма отзывы и постер удаляются через `onDelete: Cascade`. Many-to-many между фильмами и актёрами Prisma хранит в автоматически созданной таблице `_Actor2ToMovie2`.
+
+Prisma берёт строку подключения из `PRISMA_POSTGRES_URI` в `.env`. Контейнер Prisma опубликован на хосте через порт `5433`, тогда как TypeORM использует отдельный контейнер на `5432`. Обе базы могут называться одинаково: это разные экземпляры PostgreSQL с независимыми Docker volumes.
 
 ## Запуск
 
