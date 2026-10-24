@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, Generated, OneToOne, PrimaryColumn, UpdateDateColumn, type Relation } from "typeorm";
+import { Column, CreateDateColumn, Entity, Generated, JoinColumn, OneToOne, PrimaryColumn, UpdateDateColumn, type Relation } from "typeorm";
 import { MovieEntity } from "./movie.entity.js";
 
 @Entity({
@@ -15,8 +15,12 @@ export class MoviePosterEntity {
     })
     url: string
 
-    @OneToOne(() => MovieEntity, movie => movie.poster)
-    movie: Relation<MovieEntity>
+    @Column({ name: 'movie_id', type: 'int4', unique: true })
+    movieId: number;
+
+    @OneToOne(() => MovieEntity, movie => movie.poster, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'movie_id', referencedColumnName: 'id' })
+    movie: Relation<MovieEntity>;
 
     @CreateDateColumn({
         name: 'created_at'

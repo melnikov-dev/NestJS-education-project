@@ -4,7 +4,7 @@ import { MovieController } from './movie.controller.js';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MovieEntity } from './entities/movie.entity.js';
 import { ActorModule } from '../actor/actor.module.js';
-import { MoviePosterEntity } from './entities/poster.entity.js';
+import { MoviePosterEntity } from './entities/movie-poster.entity.js';
 
 @Module({
   imports: [TypeOrmModule.forFeature([MovieEntity, MoviePosterEntity]), ActorModule],

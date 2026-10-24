@@ -5,7 +5,7 @@ import { In, Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto.js';
 import { UpdateMovieDto } from './dto/update-movie.dto..js';
 import { ActorService } from '../actor/actor.service.js';
-import { MoviePosterEntity } from './entities/poster.entity.js';
+import { MoviePosterEntity } from './entities/movie-poster.entity.js';
 
 @Injectable()
 export class MovieService {
