@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { TaskModule } from './task/task.module.js';
@@ -13,6 +13,7 @@ import { Movie2Module } from './movie-2/movie-2.module.js';
 import { Review2Module } from './review-2/review-2.module.js';
 import { Actor2Module } from './actor-2/actor-2.module.js';
 import { Poster2Module } from './poster-2/poster-2.module.js';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware.js';
 
 @Module({
   imports: [
@@ -36,4 +37,8 @@ import { Poster2Module } from './poster-2/poster-2.module.js';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*')
+  }
+}

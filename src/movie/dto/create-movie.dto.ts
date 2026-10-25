@@ -28,6 +28,7 @@ export class CreateMovieDto {
     @IsInt({ each: true })
     actorIds: number[]
 
+    @IsOptional()
     @IsNotEmpty()
     @IsString()
     @IsUrl()

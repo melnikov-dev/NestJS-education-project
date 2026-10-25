@@ -28,6 +28,7 @@ export class CreateMovie2Dto {
   @IsInt({ each: true })
   actorIds: number[];
 
+  @IsOptional()
   @IsNotEmpty()
   @IsString()
   @IsUrl()

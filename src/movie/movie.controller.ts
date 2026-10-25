@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, UsePipes } from '@nestjs/common';
 import { MovieService } from './movie.service.js';
 import { CreateMovieDto } from './dto/create-movie.dto.js';
 import { UpdateMovieDto } from './dto/update-movie.dto..js';
+import { StringToLowercasePipe } from '../common/pipes/string-to-lowercase.pipe.js';
 
 @Controller('movies')
 export class MovieController {
@@ -17,6 +18,7 @@ export class MovieController {
     return this.movieService.findById(Number(id))
   }
 
+  @UsePipes(StringToLowercasePipe)
   @Post()
   async create(@Body() dto: CreateMovieDto) {
     return this.movieService.create(dto)
