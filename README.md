@@ -322,6 +322,39 @@ app.useGlobalPipes(new ValidationPipe());
 
 **Общая схема:** запрос проходит через Guards, затем Interceptors (до вызова обработчика), Pipes обрабатывают входные параметры, после чего выполняется метод контроллера. Interceptors также обрабатывают результат после выполнения метода. Если возникает необработанное исключение, его может обработать Exception Filter.
 
+## Swagger / OpenAPI
+
+В проект добавлена документация API через Swagger (модуль `@nestjs/swagger`). Она генерируется автоматически на основе декораторов контроллеров и DTO и доступна как интерактивная страница.
+
+Настройка выполнена в `main.ts`:
+
+```ts
+const config = new DocumentBuilder()
+  .setTitle('NestJS education project API')
+  .setDescription('API documentation for NestJS education project')
+  .setVersion('1.0.0')
+  .setContact('Dmitry Melnikov', 'https://t.me/MelnikovD99', 'd.melnikov.dev@gmail.com')
+  .build();
+
+const document = SwaggerModule.createDocument(app, config);
+
+SwaggerModule.setup('/swagger', app, document);
+```
+
+- `DocumentBuilder` задаёт метаданные спецификации OpenAPI: заголовок, описание, версию и контакт автора.
+- `SwaggerModule.createDocument(app, config)` собирает OpenAPI-документ из зарегистрированных роутов и DTO приложения.
+- `SwaggerModule.setup('/swagger', app, document)` поднимает UI и JSON-спецификацию по указанному пути.
+
+**Путь:** `http://localhost:3000/swagger` (с учётом `PORT` из `.env`). Там же доступен JSON-документ для клиентов и кодогенерации.
+
+**Зачем нужен:** Swagger — это единый источник правды по API. Он позволяет:
+- увидеть все маршруты, методы, тела запросов и ответы без чтения исходников;
+- отправлять запросы прямо из браузера (кнопка **Try it out**) и сразу видеть результат;
+- описывать DTO через `@ApiProperty()` и эндпоинты через `@ApiOperation()`/`@ApiResponse()`, чтобы схема и валидация не расходились;
+- делиться контрактом с фронтендом и генерировать клиентов по OpenAPI-схеме.
+
+Так как в проекте уже есть `ValidationPipe` и `class-validator`, декораторы Swagger на DTO логично дополняют валидацию: ограничения описываются один раз и попадают и в рантайм-проверку, и в документацию.
+
 ## Запуск
 
 ```bash
